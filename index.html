@@ -1,0 +1,1714 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Elden Ring – Boss Tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Pro:ital,wght@0,300;0,400;1,300&display=swap" rel="stylesheet">
+
+<style>
+:root {
+  --gold:        #c9a44a;
+  --gold-light:  #e3b873;
+  --gold-dim:    #7d6a3d;
+  --parchment:   #e6dcc8;
+  --parchment-dim: #a89880;
+  --bg-deep:     #0a0907;
+  --bg-mid:      #111008;
+  --bg-panel:    rgba(12, 10, 6, 0.92);
+  --bg-card:     rgba(20, 17, 10, 0.85);
+  --red:         #c44a3a;
+  --red-bright:  #e05a4f;
+  --border:      rgba(201, 164, 74, 0.25);
+  --border-bright: rgba(201, 164, 74, 0.6);
+  --shadow-gold: 0 0 30px rgba(201, 164, 74, 0.12);
+  --radius: 6px;
+  --twitch: #9146ff;
+  --twitch-dim: rgba(145,70,255,0.15);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html {
+  background: var(--bg-deep);
+  color: var(--parchment);
+  font-family: 'Crimson Pro', Georgia, serif;
+  font-size: 16px;
+  min-height: 100vh;
+}
+
+body {
+  background:
+    radial-gradient(ellipse 80% 60% at 50% 0%, rgba(201,164,74,0.06) 0%, transparent 65%),
+    radial-gradient(ellipse 60% 80% at 80% 100%, rgba(100,40,20,0.08) 0%, transparent 60%),
+    var(--bg-deep);
+  min-height: 100vh;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.35;
+}
+
+.page-wrapper {
+  position: relative;
+  z-index: 1;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 20px 60px;
+}
+
+.site-header {
+  padding: 40px 0 0;
+  text-align: center;
+  position: relative;
+}
+
+.site-header h1 {
+  font-family: 'Cinzel', serif;
+  font-size: clamp(28px, 5vw, 52px);
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: var(--gold-light);
+  text-shadow: 0 0 40px rgba(201,164,74,0.4), 0 2px 8px rgba(0,0,0,0.8);
+  line-height: 1.1;
+}
+
+.site-header .subtitle {
+  font-family: 'Crimson Pro', serif;
+  font-style: italic;
+  font-size: 18px;
+  color: var(--parchment-dim);
+  letter-spacing: 0.08em;
+  margin-top: 6px;
+}
+
+.header-ornament {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  justify-content: center;
+  margin: 18px 0 30px;
+}
+
+.header-ornament::before,
+.header-ornament::after {
+  content: "";
+  flex: 1;
+  max-width: 220px;
+  height: 1px;
+  background: linear-gradient(to right, transparent, var(--gold-dim), transparent);
+}
+
+.ornament-rune {
+  font-family: 'Cinzel', serif;
+  font-size: 20px;
+  color: var(--gold-dim);
+}
+
+.stats-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.stat-chip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-family: 'Cinzel', serif;
+  font-size: 15px;
+  letter-spacing: 0.04em;
+  color: var(--gold);
+  box-shadow: var(--shadow-gold);
+  transition: all 0.3s ease;
+}
+
+.stat-chip .icon { font-size: 18px; }
+.stat-chip.deaths-chip { border-color: rgba(180, 60, 50, 0.4); color: var(--gold); }
+.stat-chip .value { font-weight: 700; font-size: 17px; }
+
+/* avg deaths chip – subtle orange tint */
+.stat-chip.avg-chip { border-color: rgba(201,120,50,0.35); }
+
+#timer-chip { display: none; }
+#timer-chip .timer-value {
+  font-family: 'Crimson Pro', serif;
+  font-size: 18px;
+  letter-spacing: 0.06em;
+  font-variant-numeric: tabular-nums;
+}
+
+.controls-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 14px;
+  padding: 16px 20px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.ctrl-label {
+  font-family: 'Cinzel', serif;
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  color: var(--gold-dim);
+  text-transform: uppercase;
+  margin-right: 4px;
+}
+
+.toggle-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 18px;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--parchment-dim);
+  font-family: 'Crimson Pro', serif;
+  font-size: 15px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.toggle-btn:hover { border-color: var(--gold-dim); color: var(--parchment); background: rgba(201,164,74,0.06); }
+.toggle-btn.active { border-color: var(--gold); color: var(--gold); background: rgba(201,164,74,0.1); box-shadow: 0 0 12px rgba(201,164,74,0.15); }
+
+.toggle-btn .dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--gold-dim); flex-shrink: 0;
+  transition: background 0.25s ease, box-shadow 0.25s ease;
+}
+
+.toggle-btn.active .dot { background: var(--gold); box-shadow: 0 0 8px var(--gold); }
+
+.toggle-btn.twitch-btn { border-color: rgba(145, 70, 255, 0.35); color: rgba(180, 140, 255, 0.85); }
+.toggle-btn.twitch-btn .dot { background: rgba(145, 70, 255, 0.5); }
+.toggle-btn.twitch-btn:hover { border-color: var(--twitch); color: #b89cff; background: var(--twitch-dim); }
+.toggle-btn.twitch-btn.active { border-color: var(--twitch); color: #c4a8ff; background: var(--twitch-dim); box-shadow: 0 0 16px rgba(145,70,255,0.25); }
+.toggle-btn.twitch-btn.active .dot { background: var(--twitch); box-shadow: 0 0 8px var(--twitch); }
+
+.divider { width: 1px; height: 28px; background: var(--border); flex-shrink: 0; }
+
+.refresh-indicator {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  justify-content: flex-end;        /* rechtsbündig */
+  margin-top: -8px;                 /* nah an die Controls-Bar */
+  margin-bottom: 8px;
+  padding-right: 4px;
+  font-family: 'Crimson Pro', serif;
+  font-style: italic;
+  font-size: 13px;
+  color: var(--parchment-dim);
+}
+
+.refresh-dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: #4a8c4a; box-shadow: 0 0 6px #4a8c4a;
+  animation: pulse-green 2.5s ease-in-out infinite; flex-shrink: 0;
+}
+
+@keyframes pulse-green { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+.refresh-dot.loading {
+  background: var(--gold); box-shadow: 0 0 6px var(--gold);
+  animation: pulse-gold 0.6s ease-in-out infinite;
+}
+
+@keyframes pulse-gold { 0%, 100% { opacity: 1; } 50% { opacity: 0.2; } }
+
+/* ══════════════════════════════════════════
+   SEARCH BAR
+══════════════════════════════════════════ */
+
+.search-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+  padding: 10px 20px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  transition: border-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+.search-bar:focus-within {
+  border-color: rgba(201,164,74,0.5);
+  box-shadow: 0 0 20px rgba(201,164,74,0.08);
+}
+
+.search-icon {
+  font-size: 16px;
+  color: var(--gold-dim);
+  flex-shrink: 0;
+  pointer-events: none;
+}
+
+.search-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--parchment);
+  font-family: 'Crimson Pro', serif;
+  font-size: 16px;
+  letter-spacing: 0.03em;
+}
+
+.search-input::placeholder {
+  color: var(--parchment-dim);
+  opacity: 0.5;
+  font-style: italic;
+}
+
+.search-clear {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 22px; height: 22px;
+  background: rgba(201,164,74,0.12);
+  border: 1px solid rgba(201,164,74,0.2);
+  border-radius: 50%;
+  color: var(--gold-dim);
+  font-size: 12px;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+}
+.search-clear:hover { background: rgba(201,164,74,0.2); color: var(--gold); }
+.search-clear.visible { display: flex; }
+
+.search-result-count {
+  font-family: 'Cinzel', serif;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  color: var(--gold-dim);
+  flex-shrink: 0;
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+.search-result-count.visible { opacity: 1; }
+
+/* Search highlight in boss names */
+.boss-name mark {
+  background: transparent;
+  color: var(--gold-light);
+  font-weight: 600;
+  text-decoration: underline;
+  text-decoration-color: rgba(201,164,74,0.4);
+  text-underline-offset: 2px;
+}
+
+/* Search mode – hide non-matching areas */
+.area-card.search-hidden { display: none; }
+
+/* In search mode force-expand all areas */
+body.searching .area-card .boss-list { max-height: 2000px !important; }
+body.searching .area-card .area-toggle-icon { opacity: 0.3; pointer-events: none; }
+
+/* Non-matching boss rows */
+.boss-row.search-nomatch { display: none; }
+
+
+/* ══════════════════════════════════════════
+   RANKING PANEL
+══════════════════════════════════════════ */
+
+.ranking-panel {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  margin-bottom: 20px;
+  overflow: hidden;
+  transition: border-color 0.3s ease;
+}
+
+.ranking-panel:hover { border-color: rgba(201,164,74,0.4); }
+
+.ranking-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px;
+  cursor: pointer;
+  user-select: none;
+  border-bottom: 1px solid transparent;
+  transition: background 0.2s ease, border-color 0.25s ease;
+  gap: 12px;
+}
+
+.ranking-header:hover { background: rgba(201,164,74,0.04); }
+
+.ranking-panel:not(.collapsed) .ranking-header {
+  border-bottom-color: var(--border);
+}
+
+.ranking-header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ranking-toggle-icon {
+  font-size: 10px;
+  color: var(--gold-dim);
+  flex-shrink: 0;
+  transition: transform 0.25s ease;
+}
+
+.ranking-panel.collapsed .ranking-toggle-icon { transform: rotate(-90deg); }
+
+.ranking-title {
+  font-family: 'Cinzel', serif;
+  font-size: 13px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+
+.ranking-subtitle {
+  font-family: 'Crimson Pro', serif;
+  font-style: italic;
+  font-size: 13px;
+  color: var(--parchment-dim);
+}
+
+.ranking-body {
+  max-height: 1000px;
+  overflow: hidden;
+  transition: max-height 0.4s ease;
+}
+
+.ranking-panel.collapsed .ranking-body { max-height: 0; }
+
+.ranking-list {
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ranking-entry {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 14px;
+  border-radius: 4px;
+  background: rgba(0,0,0,0.2);
+  border: 1px solid rgba(201,164,74,0.06);
+  transition: background 0.15s ease, border-color 0.15s ease;
+  animation: rankFadeIn 0.4s ease both;
+}
+
+.ranking-entry:hover { background: rgba(201,164,74,0.04); border-color: rgba(201,164,74,0.15); }
+
+@keyframes rankFadeIn {
+  from { opacity: 0; transform: translateX(-8px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+.rank-number {
+  font-family: 'Cinzel', serif;
+  font-size: 16px;
+  letter-spacing: 0.06em;
+  color: var(--gold-dim);
+  min-width: 24px;
+  flex-shrink: 0;
+  text-align: right;
+}
+
+.rank-number.top1 { color: #e3b873; font-size: 16px; }
+.rank-number.top2 { color: #c0c0c0; }
+.rank-number.top3 { color: #cd7f32; }
+
+.rank-bar-wrap {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.rank-boss-name {
+  font-family: 'Crimson Pro', serif;
+  font-size: 14px;
+  color: var(--parchment);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.rank-boss-name.is-main { color: var(--gold-light); font-weight: 600; }
+
+.rank-bar-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.rank-bar-bg {
+  flex: 1;
+  height: 4px;
+  background: rgba(255,255,255,0.05);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.rank-bar-fill {
+  height: 100%;
+  border-radius: 2px;
+  background: linear-gradient(to right, var(--gold-dim), var(--gold));
+  transition: width 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.rank-entry-1 .rank-bar-fill { background: linear-gradient(to right, #b8882a, #e3c86a); }
+.rank-entry-2 .rank-bar-fill { background: linear-gradient(to right, #8a6a3a, #c9a44a); }
+
+.rank-deaths {
+  font-family: 'Cinzel', serif;
+  font-size: 16px;
+  color: var(--gold);
+  flex-shrink: 0;
+  min-width: 38px;
+  text-align: right;
+  letter-spacing: 0.04em;
+}
+
+.rank-deaths .unit { font-size: 10px; color: var(--parchment-dim); }
+
+.ranking-empty {
+  padding: 28px;
+  text-align: center;
+  font-family: 'Crimson Pro', serif;
+  font-style: italic;
+  color: var(--parchment-dim);
+  opacity: 0.5;
+}
+
+
+/* ══════════════════════════════════════════
+   existing styles (unchanged)
+══════════════════════════════════════════ */
+
+#pinned-section { display: none; margin-bottom: 30px; }
+
+.pinned-header {
+  font-family: 'Cinzel', serif; font-size: 13px; letter-spacing: 0.15em;
+  text-transform: uppercase; color: var(--gold-dim); margin-bottom: 10px;
+  padding-bottom: 8px; border-bottom: 1px solid var(--border);
+}
+
+.pinned-list { display: flex; flex-wrap: wrap; gap: 10px; }
+
+.pinned-card {
+  display: flex; align-items: center; gap: 10px; padding: 10px 16px;
+  background: var(--bg-card); border: 1px solid rgba(201,164,74,0.3);
+  border-radius: var(--radius); animation: pinnedGlow 2.5s ease-in-out infinite;
+}
+
+@keyframes pinnedGlow {
+  0%, 100% { box-shadow: 0 0 8px rgba(201,164,74,0.1); }
+  50% { box-shadow: 0 0 20px rgba(201,164,74,0.35); }
+}
+
+.pinned-card.done { opacity: 0.45; animation: none; }
+.pinned-name { font-family: 'Crimson Pro', serif; font-size: 15px; color: var(--parchment); }
+.pinned-name.main-boss { color: var(--gold-light); font-weight: 600; }
+.pinned-deaths { font-family: 'Cinzel', serif; font-size: 13px; color: var(--gold); }
+
+.areas-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; }
+
+.area-card {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius); overflow: hidden;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.area-card:hover { border-color: rgba(201,164,74,0.4); box-shadow: 0 4px 30px rgba(0,0,0,0.4), 0 0 20px rgba(201,164,74,0.05); }
+
+.area-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 16px; cursor: pointer; user-select: none;
+  border-bottom: 1px solid var(--border); transition: background 0.2s ease; gap: 10px;
+}
+
+.area-header:hover { background: rgba(201,164,74,0.04); }
+.area-header-left { display: flex; align-items: center; gap: 10px; min-width: 0; }
+
+.area-toggle-icon { font-size: 10px; color: var(--gold-dim); flex-shrink: 0; transition: transform 0.25s ease; }
+.area-card.collapsed .area-toggle-icon { transform: rotate(-90deg); }
+
+.area-name {
+  font-family: 'Cinzel', serif; font-size: 14px; letter-spacing: 0.05em;
+  color: var(--gold-light); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+.area-progress-wrap { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.area-fraction { font-family: 'Crimson Pro', serif; font-size: 13px; color: var(--parchment-dim); white-space: nowrap; }
+.area-progress-bar { width: 60px; height: 3px; background: rgba(255,255,255,0.07); border-radius: 2px; overflow: hidden; }
+
+.area-progress-fill {
+  height: 100%; background: linear-gradient(to right, var(--gold-dim), var(--gold));
+  border-radius: 2px; transition: width 0.6s ease;
+}
+
+.area-progress-fill.complete { background: linear-gradient(to right, #4a7c4a, #6ab86a); }
+
+.boss-list { overflow: hidden; max-height: 2000px; transition: max-height 0.35s ease; }
+.area-card.collapsed .boss-list { max-height: 0; }
+
+.boss-row {
+  display: flex; align-items: center; gap: 0; padding: 7px 16px;
+  border-bottom: 1px solid rgba(201,164,74,0.06); transition: background 0.15s ease;
+}
+
+.boss-row:last-child { border-bottom: none; }
+.boss-row:hover { background: rgba(201,164,74,0.04); }
+
+.boss-deaths { font-family: 'Cinzel', serif; font-size: 14px; color: var(--gold); min-width: 40px; flex-shrink: 0; opacity: 0.8; }
+.boss-deaths-zero { opacity: 0.6; }
+
+.boss-name {
+  font-family: 'Crimson Pro', serif; font-size: 15px; color: var(--parchment);
+  flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  transition: color 0.3s ease, opacity 0.3s ease;
+}
+
+.boss-name.main { color: var(--gold-light); font-weight: 600; }
+.boss-row.done .boss-name { opacity: 0.5; text-decoration: line-through; text-decoration-color: rgba(201,164,74,0.3); }
+.boss-row.done .boss-deaths { opacity: 0.6; }
+
+.boss-check { font-size: 14px; flex-shrink: 0; margin-left: 8px; opacity: 0; transition: opacity 0.3s ease; color: #6ab86a; }
+.boss-row.done .boss-check { opacity: 0.7; }
+
+@keyframes deathFlash {
+  0%   { background: transparent; }
+  20%  { background: rgba(196, 74, 58, 0.2); }
+  100% { background: transparent; }
+}
+.death-flash { animation: deathFlash 0.8s ease-out; }
+
+@keyframes bossComplete {
+  0%   { background: transparent; }
+  20%  { background: rgba(201, 164, 74, 0.25); }
+  100% { background: transparent; }
+}
+.boss-complete-flash { animation: bossComplete 1.5s ease-out; }
+
+.toast {
+  position: fixed; bottom: 30px; left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: linear-gradient(135deg, rgba(20,17,10,0.97), rgba(12,10,6,0.97));
+  border: 1px solid var(--gold); border-radius: var(--radius);
+  padding: 14px 28px; font-family: 'Cinzel', serif; font-size: 16px;
+  color: var(--gold-light); letter-spacing: 0.08em;
+  box-shadow: 0 0 40px rgba(201,164,74,0.3), 0 8px 30px rgba(0,0,0,0.6);
+  z-index: 999; opacity: 0; pointer-events: none; transition: all 0.4s ease;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+.loading-overlay {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  min-height: 300px; gap: 16px; color: var(--gold-dim); font-family: 'Cinzel', serif;
+  font-size: 15px; letter-spacing: 0.1em;
+}
+
+.loading-spinner {
+  width: 36px; height: 36px; border: 2px solid rgba(201,164,74,0.15);
+  border-top-color: var(--gold); border-radius: 50%; animation: spin 1s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+@keyframes statPulse {
+  0%   { transform: scale(1); }
+  30%  { transform: scale(1.18); }
+  60%  { transform: scale(0.96); }
+  100% { transform: scale(1); }
+}
+.stat-pulse { animation: statPulse 0.6s ease-out; }
+
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg-deep); }
+::-webkit-scrollbar-thumb { background: var(--gold-dim); border-radius: 3px; }
+
+@media (max-width: 600px) {
+  .areas-grid { grid-template-columns: 1fr; }
+  .controls-bar { flex-direction: column; align-items: flex-start; }
+  .refresh-indicator { margin-left: 0; }
+  .divider { display: none; }
+}
+
+.site-footer {
+  text-align: center; margin-top: 60px; padding: 20px 0;
+  border-top: 1px solid var(--border); font-family: 'Crimson Pro', serif;
+  font-size: 13px; color: var(--parchment-dim); opacity: 0.5;
+}
+
+/* ── CLIP MODAL ── */
+.clip-modal-backdrop {
+  position: fixed; inset: 0; background: rgba(5, 4, 2, 0.88);
+  backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+  z-index: 500; opacity: 0; pointer-events: none; transition: opacity 0.35s ease;
+}
+.clip-modal-backdrop.open { opacity: 1; pointer-events: all; }
+
+.clip-modal {
+  position: fixed; inset: 0; z-index: 501; display: flex; flex-direction: column;
+  pointer-events: none; transform: translateY(30px); opacity: 0;
+  transition: opacity 0.35s ease, transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.clip-modal.open { pointer-events: all; opacity: 1; transform: translateY(0); }
+
+.clip-modal-inner {
+  display: flex; flex-direction: column; max-width: 1260px; width: 100%;
+  margin: auto; height: calc(100vh - 48px); max-height: 900px;
+  background:
+    radial-gradient(ellipse 70% 40% at 50% 0%, rgba(145,70,255,0.06) 0%, transparent 60%),
+    linear-gradient(170deg, rgba(18,14,8,0.98) 0%, rgba(10,9,7,0.99) 100%);
+  border: 1px solid rgba(145,70,255,0.28); border-radius: 10px;
+  box-shadow: 0 0 80px rgba(145,70,255,0.12), 0 30px 80px rgba(0,0,0,0.7);
+  overflow: hidden;
+}
+
+.clip-modal-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 18px 28px; border-bottom: 1px solid rgba(145,70,255,0.2);
+  flex-shrink: 0; background: rgba(12,9,6,0.6);
+}
+
+.clip-modal-title { display: flex; align-items: center; gap: 14px; }
+
+.clip-modal-title h2 {
+  font-family: 'Cinzel', serif; font-size: 20px; font-weight: 600;
+  letter-spacing: 0.1em; color: var(--gold-light); text-shadow: 0 0 20px rgba(201,164,74,0.3);
+}
+
+.clip-modal-title .twitch-badge {
+  display: flex; align-items: center; gap: 6px; padding: 4px 12px;
+  background: rgba(145,70,255,0.15); border: 1px solid rgba(145,70,255,0.3);
+  border-radius: 20px; font-family: 'Crimson Pro', serif; font-size: 13px;
+  color: #b89cff; letter-spacing: 0.04em;
+}
+
+.clip-modal-title .twitch-badge .clip-count {
+  font-family: 'Cinzel', serif; font-weight: 600; font-size: 14px; color: var(--twitch);
+}
+
+.clip-close-btn {
+  display: flex; align-items: center; justify-content: center;
+  width: 36px; height: 36px; background: transparent; border: 1px solid var(--border);
+  border-radius: var(--radius); color: var(--parchment-dim); font-size: 18px;
+  cursor: pointer; transition: all 0.2s ease; flex-shrink: 0;
+}
+.clip-close-btn:hover { border-color: var(--gold-dim); color: var(--gold); background: rgba(201,164,74,0.08); }
+
+.clip-tabs {
+  display: flex; gap: 0; overflow-x: auto; border-bottom: 1px solid rgba(145,70,255,0.15);
+  flex-shrink: 0; background: rgba(8,6,4,0.5); scrollbar-width: none;
+}
+.clip-tabs::-webkit-scrollbar { display: none; }
+
+.clip-tab {
+  display: flex; align-items: center; gap: 8px; padding: 11px 22px;
+  background: transparent; border: none; border-bottom: 2px solid transparent;
+  color: var(--parchment-dim); font-family: 'Cinzel', serif; font-size: 12px;
+  letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer;
+  white-space: nowrap; transition: all 0.2s ease; flex-shrink: 0;
+}
+.clip-tab:hover { color: var(--parchment); background: rgba(145,70,255,0.05); }
+.clip-tab.active { color: #c4a8ff; border-bottom-color: var(--twitch); background: rgba(145,70,255,0.08); }
+
+.clip-tab .tab-count {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 20px; height: 18px; padding: 0 5px; background: rgba(145,70,255,0.18);
+  border-radius: 10px; font-size: 11px; color: #9b72ff;
+  font-family: 'Crimson Pro', serif; font-style: normal; font-weight: 400;
+}
+.clip-tab.active .tab-count { background: rgba(145,70,255,0.3); color: #c4a8ff; }
+
+.clip-body {
+  flex: 1; overflow-y: auto; padding: 24px 28px;
+  scrollbar-width: thin; scrollbar-color: rgba(145,70,255,0.3) transparent;
+}
+.clip-body::-webkit-scrollbar { width: 5px; }
+.clip-body::-webkit-scrollbar-track { background: transparent; }
+.clip-body::-webkit-scrollbar-thumb { background: rgba(145,70,255,0.3); border-radius: 3px; }
+
+.clip-category-section { display: none; }
+.clip-category-section.active { display: block; }
+
+.clip-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 20px; }
+
+.clip-card {
+  background: rgba(14,11,7,0.8); border: 1px solid rgba(145,70,255,0.15);
+  border-radius: var(--radius); overflow: hidden;
+  transition: border-color 0.25s ease, box-shadow 0.25s ease, transform 0.25s ease;
+}
+.clip-card:hover { border-color: rgba(145,70,255,0.45); box-shadow: 0 4px 30px rgba(145,70,255,0.1), 0 0 0 1px rgba(145,70,255,0.08); transform: translateY(-2px); }
+
+.clip-embed-wrapper { position: relative; width: 100%; padding-top: 56.25%; background: #070507; }
+.clip-embed-wrapper iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: none; display: block; }
+
+.clip-placeholder {
+  position: absolute; inset: 0; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 10px;
+  background: rgba(10,7,14,0.9); cursor: pointer; transition: background 0.2s ease;
+}
+.clip-placeholder:hover { background: rgba(18,12,24,0.9); }
+.clip-placeholder-icon { font-size: 38px; line-height: 1; opacity: 0.7; }
+.clip-placeholder-text { font-family: 'Crimson Pro', serif; font-size: 13px; color: var(--parchment-dim); letter-spacing: 0.04em; }
+
+.clip-card-footer { padding: 10px 14px; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.clip-number { font-family: 'Cinzel', serif; font-size: 11px; letter-spacing: 0.08em; color: rgba(145,70,255,0.5); }
+
+.clip-open-link {
+  display: inline-flex; align-items: center; gap: 5px; padding: 4px 12px;
+  background: rgba(145,70,255,0.1); border: 1px solid rgba(145,70,255,0.25);
+  border-radius: 4px; color: #b89cff; font-family: 'Crimson Pro', serif;
+  font-size: 13px; text-decoration: none; transition: all 0.2s ease;
+}
+.clip-open-link:hover { background: rgba(145,70,255,0.2); border-color: rgba(145,70,255,0.5); color: #c9b5ff; }
+
+.clip-empty {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  min-height: 200px; gap: 12px; color: var(--parchment-dim); font-family: 'Crimson Pro', serif;
+  font-style: italic; font-size: 16px; opacity: 0.5;
+}
+.clip-empty-icon { font-size: 40px; opacity: 0.4; }
+
+.clip-loading {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  min-height: 200px; gap: 14px; color: rgba(145,70,255,0.6);
+  font-family: 'Cinzel', serif; font-size: 14px; letter-spacing: 0.1em;
+}
+
+.clip-loading-spinner {
+  width: 32px; height: 32px; border: 2px solid rgba(145,70,255,0.12);
+  border-top-color: var(--twitch); border-radius: 50%; animation: spin 1s linear infinite;
+}
+
+@media (max-width: 600px) {
+  .clip-modal-inner { height: 100vh; max-height: none; border-radius: 0; margin: 0; }
+  .clip-grid { grid-template-columns: 1fr; }
+  .clip-modal-header { padding: 14px 16px; }
+  .clip-body { padding: 16px; }
+  .clip-modal-title h2 { font-size: 16px; }
+}
+</style>
+</head>
+<body>
+
+<div class="page-wrapper">
+
+  <header class="site-header">
+    <h1>Elden Ring</h1>
+    <p class="subtitle">Boss Tracker &amp; Fortschrittsübersicht</p>
+    <div class="header-ornament">
+      <span class="ornament-rune">⚔</span>
+    </div>
+  </header>
+
+  <div class="stats-bar">
+    <div class="stat-chip deaths-chip" id="stat-deaths">
+      <span class="icon">💀</span>
+      <span>Tode:</span>
+      <span class="value" id="val-deaths">–</span>
+    </div>
+    <div class="stat-chip" id="stat-bosses">
+      <span class="icon">🏆</span>
+      <span>Bosse:</span>
+      <span class="value" id="val-bosses">–</span>
+    </div>
+    <div class="stat-chip" id="stat-percent">
+      <span class="icon">📜</span>
+      <span>Abschluss:</span>
+      <span class="value" id="val-percent">–</span>
+    </div>
+    <div class="stat-chip avg-chip" id="stat-avg">
+      <span class="icon">⚖️</span>
+      <span>Ø Tode/Boss:</span>
+      <span class="value" id="val-avg">–</span>
+    </div>
+    <div class="stat-chip" id="timer-chip">
+      <span class="icon">⏳</span>
+      <span id="val-timer-label">Aktueller Boss:</span>
+      <span class="value timer-value" id="val-timer">00:00:00</span>
+    </div>
+  </div>
+
+  <div class="controls-bar">
+    <span class="ctrl-label">Anzeige:</span>
+    <button class="toggle-btn" id="btn-basegame" onclick="toggleFlag('base')">
+      <span class="dot"></span> Base Game
+    </button>
+    <button class="toggle-btn" id="btn-dlc" onclick="toggleFlag('dlc')">
+      <span class="dot"></span> Shadow of the Erdtree DLC
+    </button>
+    <div class="divider"></div>
+    <button class="toggle-btn" id="btn-expand-all" onclick="setAllCollapsed(false)">
+      <span class="dot"></span> Alle aufklappen
+    </button>
+    <button class="toggle-btn" id="btn-collapse-all" onclick="setAllCollapsed(true)">
+      <span class="dot"></span> Alle zuklappen
+    </button>
+    <div class="divider"></div>
+    <button class="toggle-btn twitch-btn" id="btn-clips" onclick="openClipModal()">
+      <span class="dot"></span>
+      🎬 Clip-Sammlung
+      <span id="btn-clips-count" style="font-family:'Crimson Pro',serif;font-size:12px;opacity:0.6;"></span>
+    </button>
+  </div>
+
+  <div class="refresh-indicator" id="refresh-indicator">
+  <span class="refresh-dot" id="refresh-dot"></span>
+  <span id="refresh-text">Verbunden</span>
+  </div>
+
+  <!-- SEARCH BAR -->
+  <div class="search-bar">
+    <span class="search-icon">🔍</span>
+    <input
+      class="search-input"
+      id="search-input"
+      type="text"
+      placeholder="Boss suchen… z.B. Malenia, Margit, Mohg"
+      autocomplete="off"
+      spellcheck="false"
+      oninput="onSearchInput(this.value)"
+    >
+    <span class="search-result-count" id="search-result-count"></span>
+    <span class="search-clear" id="search-clear" onclick="clearSearch()" title="Suche leeren">✕</span>
+  </div>
+
+  <!-- RANKING PANEL -->
+  <div class="ranking-panel" id="ranking-panel">
+    <div class="ranking-header" onclick="toggleRanking()">
+      <div class="ranking-header-left">
+        <span class="ranking-toggle-icon">▼</span>
+        <span class="ranking-title">☠ Tode-Ranking</span>
+        <span class="ranking-subtitle" id="ranking-subtitle">— die härtesten Begegnungen</span>
+      </div>
+    </div>
+    <div class="ranking-body">
+      <div class="ranking-list" id="ranking-list">
+        <div class="ranking-empty">Noch keine Daten geladen…</div>
+      </div>
+    </div>
+  </div>
+
+  <section id="pinned-section">
+    <div class="pinned-header">📌 Angepinnte Bosse</div>
+    <div class="pinned-list" id="pinned-list"></div>
+  </section>
+
+  <main id="main-content">
+    <div class="loading-overlay" id="loading-overlay">
+      <div class="loading-spinner"></div>
+      <span>Lade Daten aus den Archiven&hellip;</span>
+    </div>
+    <div class="areas-grid" id="areas-grid" style="display:none;"></div>
+  </main>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<footer class="site-footer">
+  Daten werden alle 5 Sekunden aus Google Sheets geladen &bull; Elden Ring Boss Tracker
+</footer>
+
+<div class="clip-modal-backdrop" id="clip-backdrop" onclick="closeClipModal()"></div>
+
+<div class="clip-modal" id="clip-modal" role="dialog" aria-modal="true" aria-label="Clip-Sammlung">
+  <div class="clip-modal-inner">
+    <div class="clip-modal-header">
+      <div class="clip-modal-title">
+        <h2>Clip&#8209;Sammlung</h2>
+        <div class="twitch-badge">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="#9146ff"><path d="M11.571 4.714h1.715v5.143H11.57zm4.715 0H18v5.143h-1.714zM6 0L1.714 4.286v15.428h5.143V24l4.286-4.286h3.428L22.286 12V0zm14.571 11.143l-3.428 3.428h-3.429l-3 3v-3H6.857V1.714h13.714z"/></svg>
+          <span>Twitch</span>
+          <span class="clip-count" id="modal-clip-count">0</span> Clips
+        </div>
+      </div>
+      <button class="clip-close-btn" onclick="closeClipModal()" title="Schließen">✕</button>
+    </div>
+    <div class="clip-tabs" id="clip-tabs"></div>
+    <div class="clip-body" id="clip-body">
+      <div class="clip-loading" id="clip-modal-loading">
+        <div class="clip-loading-spinner"></div>
+        <span>Clips werden geladen…</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+// KONFIGURATION
+// ═══════════════════════════════════════════════════════════
+
+const SPREADSHEET_ID = "1r9BzZJYFrk4rQLlMn4ZPBBUuc8u_peqwThTi1UTCQcE";
+
+const SHEET_URL = "https://docs.google.com/spreadsheets/d/" + SPREADSHEET_ID + "/gviz/tq?sheet=OBS_OVERLAY&tqx=out:json";
+const CLIPS_URL = "https://docs.google.com/spreadsheets/d/" + SPREADSHEET_ID
+  + "/gviz/tq?sheet=OBS_OVERLAY&tqx=out:json&range=V10:W45";
+
+// Anzahl Einträge im Ranking
+const RANKING_TOP_N = 10;
+
+const MAIN_BOSSES = new Set([
+  "Margit, das Grausame Mal",
+  "Godrick der Verpflanzte",
+  "Rennala, Königin des Vollmonds",
+  "Roter Wolf von Radagon",
+  "Sternengeißel Radahn",
+  "Götterverschlingende Schlange / Rykard, Fürst der Blasphemie",
+  "Drachenbaumwächter",
+  "Godfrey, Erster Eldenfürst",
+  "Morgott, König des Mals",
+  "Mohg, Fürst des Blutes",
+  "Feuerriese",
+  "Bestienkleriker / Maliketh, die Schwarze Klinge",
+  "Duo der Götterskalpe",
+  "Malenia, Klinge von Miquella",
+  "Godfrey, Erster Eldenfürst (Hoarah Loux)",
+  "Sir Gideon Ofnir, der Allwissende",
+  "Radagon von der Goldenen Ordnung / Eldenbestie",
+  "Rellana, Zwillings-Mondritterin",
+  "Göttliche Bestie - Tanzender Löwe",
+  "Messmer der Pfähler + Böse Schlange Messmer",
+  "Bayle der Schreckliche",
+  "Midra, Herr der Rasenden Flamme",
+  "Kommandant Gaius",
+  "Romina, Heilige der Knospe",
+  "Radahn, versprochener Gemahl + Radahn, Miquellas Gemahl",
+]);
+
+// ═══════════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════════
+
+var localCollapsed      = {};
+var showBase            = true;
+var showDLC             = true;
+var previousBossStates  = {};
+var prevDeaths          = null;
+var prevDoneBosses      = null;
+
+var timerStartTs  = 0;
+var timerElapsed  = 0;
+var timerVisible  = false;
+var timerInterval = null;
+
+var clipsData      = [];
+var activeCategory = null;
+var currentAreas   = {};
+
+// Search state
+var searchQuery = "";
+
+// ═══════════════════════════════════════════════════════════
+// UTILS
+// ═══════════════════════════════════════════════════════════
+
+function isTrue(v) {
+  return [true, "TRUE", "WAHR", 1, "1", "true", "wahr"].indexOf(v) !== -1;
+}
+
+function fmtTime(ms) {
+  var s   = Math.floor(ms / 1000);
+  var h   = String(Math.floor(s / 3600)).padStart(2, "0");
+  var m   = String(Math.floor((s % 3600) / 60)).padStart(2, "0");
+  var sec = String(s % 60).padStart(2, "0");
+  return h + ":" + m + ":" + sec;
+}
+
+function showToast(msg, duration) {
+  duration = duration || 3500;
+  var el = document.getElementById("toast");
+  el.textContent = msg;
+  el.classList.add("show");
+  setTimeout(function() { el.classList.remove("show"); }, duration);
+}
+
+function pulseEl(el) {
+  if (!el) return;
+  el.classList.remove("stat-pulse");
+  void el.offsetWidth;
+  el.classList.add("stat-pulse");
+}
+
+function escHtml(str) {
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+function escAttr(str) {
+  return str.replace(/'/g, "\\'").replace(/"/g, '\\"');
+}
+
+// ═══════════════════════════════════════════════════════════
+// TIMER
+// ═══════════════════════════════════════════════════════════
+
+function updateTimerDisplay() {
+  var timerChip = document.getElementById("timer-chip");
+  if (!timerChip) return;
+  if (!timerVisible) { timerChip.style.display = "none"; return; }
+  timerChip.style.display = "flex";
+  var elapsed = timerStartTs > 0
+    ? timerElapsed + (Date.now() - timerStartTs)
+    : timerElapsed;
+  document.getElementById("val-timer").textContent = fmtTime(elapsed);
+}
+
+function startTimerTick() {
+  if (timerInterval) clearInterval(timerInterval);
+  timerInterval = setInterval(updateTimerDisplay, 1000);
+}
+
+// ═══════════════════════════════════════════════════════════
+// TOGGLE CONTROLS
+// ═══════════════════════════════════════════════════════════
+
+function toggleFlag(flag) {
+  if (flag === "base") {
+    showBase = !showBase;
+    document.getElementById("btn-basegame").classList.toggle("active", showBase);
+  } else {
+    showDLC = !showDLC;
+    document.getElementById("btn-dlc").classList.toggle("active", showDLC);
+  }
+  renderFromCache();
+}
+
+function setAllCollapsed(val) {
+  Object.keys(currentAreas).forEach(function(k) { localCollapsed[k] = val; });
+  renderAreas(currentAreas);
+}
+
+// ═══════════════════════════════════════════════════════════
+// SEARCH
+// ═══════════════════════════════════════════════════════════
+
+function onSearchInput(val) {
+  searchQuery = val.trim().toLowerCase();
+
+  var clearBtn   = document.getElementById("search-clear");
+  var countEl    = document.getElementById("search-result-count");
+
+  clearBtn.classList.toggle("visible", searchQuery.length > 0);
+  document.body.classList.toggle("searching", searchQuery.length > 0);
+
+  applySearch();
+}
+
+function clearSearch() {
+  searchQuery = "";
+  document.getElementById("search-input").value = "";
+  document.getElementById("search-clear").classList.remove("visible");
+  document.getElementById("search-result-count").classList.remove("visible");
+  document.getElementById("search-result-count").textContent = "";
+  document.body.classList.remove("searching");
+  applySearch();
+}
+
+function highlightMatch(text, query) {
+  if (!query) return escHtml(text);
+  var idx = text.toLowerCase().indexOf(query);
+  if (idx === -1) return escHtml(text);
+  return escHtml(text.substring(0, idx))
+    + "<mark>" + escHtml(text.substring(idx, idx + query.length)) + "</mark>"
+    + escHtml(text.substring(idx + query.length));
+}
+
+function applySearch() {
+  var query   = searchQuery;
+  var countEl = document.getElementById("search-result-count");
+  var grid    = document.getElementById("areas-grid");
+  if (!grid) return;
+
+  var totalMatches = 0;
+
+  grid.querySelectorAll(".area-card[data-area]").forEach(function(card) {
+    var areaName   = card.dataset.area || "";
+    var rows       = card.querySelectorAll(".boss-row[data-boss]");
+    var areaMatches = 0;
+
+    rows.forEach(function(row) {
+      var bossName = row.dataset.boss || "";
+      var matches  = !query || bossName.toLowerCase().indexOf(query) !== -1;
+      row.classList.toggle("search-nomatch", !matches);
+
+      if (matches) {
+        areaMatches++;
+        // Update highlighted name
+        var nameEl = row.querySelector(".boss-name");
+        if (nameEl) {
+          var isMain = nameEl.classList.contains("main");
+          nameEl.innerHTML = highlightMatch(bossName, query)
+            + (isMain ? "" : "");
+          // preserve mark inside spans
+        }
+      } else {
+        // restore plain text
+        var nameEl = row.querySelector(".boss-name");
+        if (nameEl && !nameEl.querySelector("mark")) {/* already plain */}
+        else if (nameEl) nameEl.innerHTML = escHtml(bossName);
+      }
+    });
+
+    var hidden = query.length > 0 && areaMatches === 0;
+    card.classList.toggle("search-hidden", hidden);
+    if (!hidden) totalMatches += areaMatches;
+  });
+
+  if (query.length > 0) {
+    countEl.textContent = totalMatches + " Treffer";
+    countEl.classList.add("visible");
+  } else {
+    countEl.classList.remove("visible");
+    countEl.textContent = "";
+    // restore all highlights
+    grid.querySelectorAll(".boss-row[data-boss]").forEach(function(row) {
+      var nameEl  = row.querySelector(".boss-name");
+      var bossName = row.dataset.boss || "";
+      if (nameEl) nameEl.innerHTML = escHtml(bossName);
+    });
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+// RANKING
+// ═══════════════════════════════════════════════════════════
+
+var rankingCollapsed = false;
+
+function toggleRanking() {
+  rankingCollapsed = !rankingCollapsed;
+  document.getElementById("ranking-panel").classList.toggle("collapsed", rankingCollapsed);
+}
+
+function renderRanking(allBosses) {
+  // allBosses: [{boss, deaths, done, area}]
+  // Filter: nur Bosse mit ≥1 Tod
+  var withDeaths = allBosses.filter(function(b) { return b.deaths > 0; });
+  withDeaths.sort(function(a, b) { return b.deaths - a.deaths; });
+  var top = withDeaths.slice(0, RANKING_TOP_N);
+
+  var maxDeaths = top.length > 0 ? top[0].deaths : 1;
+
+  // Avg deaths (all bosses that have been attempted = deaths > 0)
+  var totalDeaths   = allBosses.reduce(function(s, b) { return s + b.deaths; }, 0);
+  var bossesAttempted = allBosses.filter(function(b) { return b.deaths > 0; }).length;
+  var avgDeaths = bossesAttempted > 0 ? (totalDeaths / bossesAttempted).toFixed(1) : "–";
+
+  // Update avg chip
+  document.getElementById("val-avg").textContent = avgDeaths === "–" ? "–" : avgDeaths + " †";
+
+  // Subtitle
+  var subtitle = document.getElementById("ranking-subtitle");
+  if (subtitle) {
+    subtitle.textContent = top.length > 0
+      ? "— Top " + top.length + " von " + withDeaths.length + " bekämpften Bossen"
+      : "— noch keine Tode verzeichnet";
+  }
+
+  var listEl = document.getElementById("ranking-list");
+  if (!listEl) return;
+
+  if (top.length === 0) {
+    listEl.innerHTML = '<div class="ranking-empty">Noch keine Tode verzeichnet – viel Glück!</div>';
+    return;
+  }
+
+  var medals = ["🥇", "🥈", "🥉"];
+
+  listEl.innerHTML = top.map(function(b, i) {
+    var pct    = maxDeaths > 0 ? (b.deaths / maxDeaths * 100) : 0;
+    var isMain = MAIN_BOSSES.has(b.boss);
+    var rankLabel = i < 3 ? medals[i] : "#" + (i + 1);
+    var rankClass = i === 0 ? "top1" : (i === 1 ? "top2" : (i === 2 ? "top3" : ""));
+    var entryClass = i === 0 ? "rank-entry-1" : (i === 1 ? "rank-entry-2" : "");
+    var delayStyle = "animation-delay:" + (i * 55) + "ms";
+
+    return '<div class="ranking-entry ' + entryClass + '" style="' + delayStyle + '">'
+      + '<span class="rank-number ' + rankClass + '">' + rankLabel + '</span>'
+      + '<div class="rank-bar-wrap">'
+      + '<span class="rank-boss-name' + (isMain ? " is-main" : "") + '">' + escHtml(b.boss) + '</span>'
+      + '<div class="rank-bar-row">'
+      + '<div class="rank-bar-bg"><div class="rank-bar-fill" style="width:' + pct + '%"></div></div>'
+      + '<span class="rank-deaths">' + b.deaths.toLocaleString("de-DE") + '<span class="unit"> †</span></span>'
+      + '</div></div></div>';
+  }).join("");
+}
+
+// ═══════════════════════════════════════════════════════════
+// CLIP HELPERS
+// ═══════════════════════════════════════════════════════════
+
+function parseTwitchClip(url) {
+  if (!url || typeof url !== "string") return null;
+  url = url.trim();
+
+  var m = url.match(/clips\.twitch\.tv\/([A-Za-z0-9_\-]+)/);
+  if (m) return { type: "clip", slug: m[1], original: url };
+
+  m = url.match(/twitch\.tv\/[^/]+\/clip\/([A-Za-z0-9_\-]+)/);
+  if (m) return { type: "clip", slug: m[1], original: url };
+
+  m = url.match(/twitch\.tv\/videos\/(\d+)/);
+  if (m) return { type: "vod", id: m[1], original: url };
+
+  if (!url.includes("/") && url.length > 4) return { type: "clip", slug: url, original: url };
+
+  return { type: "link", original: url };
+}
+
+function buildEmbedUrl(parsed) {
+  var parent = window.location.hostname || "localhost";
+  if (!parsed) return null;
+  if (parsed.type === "clip") {
+    return "https://clips.twitch.tv/embed?clip=" + parsed.slug + "&parent=" + parent + "&autoplay=false";
+  }
+  if (parsed.type === "vod") {
+    return "https://player.twitch.tv/?video=" + parsed.id + "&parent=" + parent + "&autoplay=false";
+  }
+  return null;
+}
+
+// ═══════════════════════════════════════════════════════════
+// CLIP MODAL
+// ═══════════════════════════════════════════════════════════
+
+function openClipModal() {
+  document.getElementById("clip-backdrop").classList.add("open");
+  document.getElementById("clip-modal").classList.add("open");
+  document.body.style.overflow = "hidden";
+  renderClipModal();
+}
+
+function closeClipModal() {
+  document.getElementById("clip-backdrop").classList.remove("open");
+  document.getElementById("clip-modal").classList.remove("open");
+  document.body.style.overflow = "";
+}
+
+document.addEventListener("keydown", function(e) {
+  if (e.key === "Escape") closeClipModal();
+});
+
+function renderClipModal() {
+  var tabsEl = document.getElementById("clip-tabs");
+  var bodyEl = document.getElementById("clip-body");
+  var loadEl = document.getElementById("clip-modal-loading");
+
+  if (clipsData.length === 0) {
+    if (loadEl) loadEl.style.display = "flex";
+    tabsEl.innerHTML = "";
+    bodyEl.innerHTML = '<div class="clip-empty"><span class="clip-empty-icon">🎬</span><span>Noch keine Clips vorhanden.</span></div>';
+    return;
+  }
+
+  if (loadEl) loadEl.style.display = "none";
+
+  var categories = {};
+  clipsData.forEach(function(c) {
+    var cat = c.category || "Sonstige";
+    if (!categories[cat]) categories[cat] = [];
+    categories[cat].push(c);
+  });
+
+  var catNames = Object.keys(categories);
+  if (!activeCategory || !categories[activeCategory]) {
+    activeCategory = catNames[0];
+  }
+
+  tabsEl.innerHTML = catNames.map(function(cat) {
+    return '<button class="clip-tab' + (cat === activeCategory ? " active" : "") + '"'
+      + ' onclick="switchClipTab(\'' + escAttr(cat) + '\')">'
+      + escHtml(cat)
+      + '<span class="tab-count">' + categories[cat].length + '</span>'
+      + '</button>';
+  }).join("");
+
+  bodyEl.innerHTML = catNames.map(function(cat) {
+    return '<div class="clip-category-section' + (cat === activeCategory ? " active" : "") + '" data-category="' + escAttr(cat) + '">'
+      + '<div class="clip-grid">'
+      + categories[cat].map(function(c, i) { return renderClipCard(c, i); }).join("")
+      + '</div></div>';
+  }).join("");
+}
+
+function switchClipTab(cat) {
+  activeCategory = cat;
+  document.querySelectorAll(".clip-tab").forEach(function(btn) {
+    var label = btn.childNodes[0] ? btn.childNodes[0].textContent.trim() : "";
+    btn.classList.toggle("active", label === cat);
+  });
+  document.querySelectorAll(".clip-category-section").forEach(function(sec) {
+    sec.classList.toggle("active", sec.dataset.category === cat);
+  });
+  document.getElementById("clip-body").scrollTop = 0;
+}
+
+function renderClipCard(clip, index) {
+  var parsed   = parseTwitchClip(clip.url);
+  var embedUrl = buildEmbedUrl(parsed);
+  var linkUrl  = clip.url;
+  var embedHtml;
+
+  if (embedUrl) {
+    embedHtml = '<div class="clip-embed-wrapper">'
+      + '<iframe src="' + escAttr(embedUrl) + '" allowfullscreen scrolling="no" allow="autoplay; fullscreen" title="Clip ' + (index + 1) + '"></iframe>'
+      + '</div>';
+  } else {
+    embedHtml = '<div class="clip-embed-wrapper">'
+      + '<div class="clip-placeholder" onclick="window.open(\'' + escAttr(linkUrl) + '\',\'_blank\')">'
+      + '<span class="clip-placeholder-icon">▶️</span>'
+      + '<span class="clip-placeholder-text">Clip öffnen</span>'
+      + '</div></div>';
+  }
+
+  return '<div class="clip-card">'
+    + embedHtml
+    + '<div class="clip-card-footer">'
+    + '<span class="clip-number">Clip ' + String(index + 1).padStart(2, "0") + '</span>'
+    + '<a href="' + escAttr(linkUrl) + '" target="_blank" rel="noopener" class="clip-open-link">'
+    + '<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M14 3h7v7h-2V6.41l-9.29 9.3-1.42-1.42L17.59 5H14V3zM5 5h6v2H7v10h10v-4h2v6H5V5z"/></svg>'
+    + 'Auf Twitch</a>'
+    + '</div></div>';
+}
+
+// ═══════════════════════════════════════════════════════════
+// CLIPS LADEN
+// ═══════════════════════════════════════════════════════════
+
+function loadClips() {
+  fetch(CLIPS_URL + "&nocache=" + Date.now())
+    .then(function(res) { return res.text(); })
+    .then(function(text) {
+      var json = JSON.parse(text.substring(47).slice(0, -2));
+      var rows = json.table.rows;
+      var newClips = [];
+
+      rows.forEach(function(row) {
+        if (!row || !row.c) return;
+        var url      = row.c[0] && row.c[0].v ? String(row.c[0].v).trim() : "";
+        var category = row.c[1] && row.c[1].v ? String(row.c[1].v).trim() : "Sonstige";
+        if (url) newClips.push({ url: url, category: category });
+      });
+
+      var clipsChanged = JSON.stringify(newClips) !== JSON.stringify(clipsData);
+      if (clipsChanged) {
+        clipsData = newClips;
+
+        var countEl = document.getElementById("btn-clips-count");
+        if (countEl) countEl.textContent = clipsData.length > 0 ? "(" + clipsData.length + ")" : "";
+
+        var modalCount = document.getElementById("modal-clip-count");
+        if (modalCount) modalCount.textContent = clipsData.length;
+
+        if (document.getElementById("clip-modal").classList.contains("open")) {
+          renderClipModal();
+        }
+      }
+    })
+    .catch(function(err) {
+      console.error("[Clips] Fehler:", err);
+    });
+}
+
+// ═══════════════════════════════════════════════════════════
+// HAUPT-DATEN LADEN
+// ═══════════════════════════════════════════════════════════
+
+function setRefreshState(state) {
+  var dot  = document.getElementById("refresh-dot");
+  var text = document.getElementById("refresh-text");
+  if (state === "loading") {
+    dot.className = "refresh-dot loading";
+    text.textContent = "Lade…";
+  } else if (state === "ok") {
+    dot.className = "refresh-dot";
+    var now = new Date();
+    text.textContent = "Zuletzt: " + now.toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+  } else {
+    dot.style.background = "#c44a3a";
+    text.textContent = "Verbindungsfehler";
+  }
+}
+
+function loadData() {
+  setRefreshState("loading");
+  fetch(SHEET_URL + "&nocache=" + Date.now())
+    .then(function(res) { return res.text(); })
+    .then(function(text) {
+      var json = JSON.parse(text.substring(47).slice(0, -2));
+      var rows = json.table.rows;
+      processData(rows);
+      setRefreshState("ok");
+      document.getElementById("loading-overlay").style.display = "none";
+      document.getElementById("areas-grid").style.display = "grid";
+    })
+    .catch(function(err) {
+      console.error("[Main] Fehler beim Laden:", err);
+      setRefreshState("error");
+    });
+}
+
+function processData(rows) {
+  // FLAGS
+  var baseGameFlag = isTrue(rows[0] && rows[0].c[15] ? rows[0].c[15].v : false);
+  var dlcFlag      = isTrue(rows[1] && rows[1].c[15] ? rows[1].c[15].v : false);
+
+  if (prevDeaths === null) {
+    showBase = baseGameFlag;
+    showDLC  = dlcFlag;
+    document.getElementById("btn-basegame").classList.toggle("active", showBase);
+    document.getElementById("btn-dlc").classList.toggle("active", showDLC);
+  }
+
+  // TIMER
+  timerStartTs = Number(rows[0] && rows[0].c[21] ? rows[0].c[21].v : 0) || 0;
+  timerElapsed = Number(rows[2] && rows[2].c[21] ? rows[2].c[21].v : 0) || 0;
+  timerVisible = isTrue(rows[0] && rows[0].c[12] ? rows[0].c[12].v : false);
+  updateTimerDisplay();
+
+  // DEATHS
+  var baseDeaths = Number(rows[1] && rows[1].c[9] ? rows[1].c[9].v : 0) || 0;
+  var dlcDeaths  = Number(rows[168] && rows[168].c[9] ? rows[168].c[9].v : 0) || 0;
+  var globalDeaths = 0;
+  if (showBase && showDLC)  globalDeaths = baseDeaths + dlcDeaths;
+  else if (showBase)         globalDeaths = baseDeaths;
+  else if (showDLC)          globalDeaths = dlcDeaths;
+
+  if (prevDeaths !== null && globalDeaths !== prevDeaths) {
+    pulseEl(document.getElementById("stat-deaths"));
+    var el = document.getElementById("stat-deaths");
+    el.classList.remove("death-flash");
+    void el.offsetWidth;
+    el.classList.add("death-flash");
+  }
+  document.getElementById("val-deaths").textContent = globalDeaths.toLocaleString("de-DE");
+  prevDeaths = globalDeaths;
+
+  // BOSS ROWS
+  var separatorIndex = -1;
+  for (var si = 0; si < rows.length; si++) {
+    if (rows[si] && rows[si].c[1] && rows[si].c[1].v && rows[si].c[1].v.trim() === "SHADOW OF THE ERDTREE DLC") {
+      separatorIndex = si;
+      break;
+    }
+  }
+
+  var areas    = {};
+  var allBosses = []; // for ranking
+
+  rows.forEach(function(r, index) {
+    if (!r || !r.c) return;
+    var area = r.c[0] && r.c[0].v ? r.c[0].v.trim() : "";
+    var boss = r.c[1] && r.c[1].v ? r.c[1].v.trim() : "";
+    if (!area || !boss) return;
+    if (area === "Gebiet" && boss === "Boss") return;
+    if (boss === "SHADOW OF THE ERDTREE DLC") return;
+
+    var isBaseGame = separatorIndex === -1 || index < separatorIndex;
+    var isDLC      = separatorIndex !== -1  && index > separatorIndex;
+    if (isBaseGame && !showBase) return;
+    if (isDLC      && !showDLC)  return;
+
+    var done    = isTrue(r.c[2] ? r.c[2].v : false);
+    var pinned  = isTrue(r.c[4] ? r.c[4].v : false);
+    var deaths  = Number(r.c[3] ? r.c[3].v : 0) || 0;
+    var sheetCollapsed = isTrue(r.c[5] ? r.c[5].v : false);
+    var key = area + "|" + boss;
+
+    if (!(key in previousBossStates)) {
+      previousBossStates[key] = done;
+    } else if (!previousBossStates[key] && done) {
+      if (MAIN_BOSSES.has(boss)) showToast("✔ " + boss + " besiegt!");
+    }
+    previousBossStates[key] = done;
+
+    if (!areas[area]) {
+      var collapsed = (area in localCollapsed) ? localCollapsed[area] : sheetCollapsed;
+      areas[area] = { total: 0, done: 0, bosses: [], collapsed: collapsed, isDLC: isDLC };
+    }
+
+    areas[area].total++;
+    if (done) areas[area].done++;
+    areas[area].bosses.push({ boss: boss, done: done, deaths: deaths, pinned: pinned });
+
+    // Collect for ranking
+    allBosses.push({ boss: boss, deaths: deaths, done: done, area: area });
+  });
+
+  currentAreas = areas;
+
+  // GLOBAL PROGRESS
+  var totalBosses = 0, doneBosses = 0;
+  Object.values(areas).forEach(function(a) { totalBosses += a.total; doneBosses += a.done; });
+
+  if (prevDoneBosses !== null && doneBosses !== prevDoneBosses) {
+    pulseEl(document.getElementById("stat-bosses"));
+    pulseEl(document.getElementById("stat-percent"));
+  }
+  document.getElementById("val-bosses").textContent = doneBosses + " / " + totalBosses;
+  var pct = totalBosses > 0 ? Math.round((doneBosses / totalBosses) * 100) : 0;
+  document.getElementById("val-percent").textContent = pct + "%";
+  prevDoneBosses = doneBosses;
+
+  // RANKING + AVG
+  renderRanking(allBosses);
+
+  renderAreas(areas);
+}
+
+function renderFromCache() {
+  if (Object.keys(currentAreas).length > 0) renderAreas(currentAreas);
+}
+
+// ═══════════════════════════════════════════════════════════
+// RENDER AREAS
+// ═══════════════════════════════════════════════════════════
+
+function renderAreas(areas) {
+  var grid = document.getElementById("areas-grid");
+
+  // Pinned
+  var allPinned = [];
+  Object.values(areas).forEach(function(a) {
+    a.bosses.forEach(function(b) { if (b.pinned) allPinned.push(b); });
+  });
+  var pinnedSection = document.getElementById("pinned-section");
+  var pinnedList    = document.getElementById("pinned-list");
+  if (allPinned.length > 0) {
+    pinnedSection.style.display = "block";
+    pinnedList.innerHTML = "";
+    allPinned.forEach(function(b) {
+      var isMain = MAIN_BOSSES.has(b.boss);
+      var card = document.createElement("div");
+      card.className = "pinned-card" + (b.done ? " done" : "");
+      card.innerHTML = '<span class="pinned-deaths">📌 ' + (b.deaths > 0 ? b.deaths : "–") + '</span>'
+        + '<span class="pinned-name' + (isMain ? " main-boss" : "") + '">' + escHtml(b.boss) + '</span>';
+      pinnedList.appendChild(card);
+    });
+  } else {
+    pinnedSection.style.display = "none";
+  }
+
+  var existingCards = {};
+  grid.querySelectorAll(".area-card[data-area]").forEach(function(el) {
+    existingCards[el.dataset.area] = el;
+  });
+
+  var newKeys = Object.keys(areas);
+  Object.keys(existingCards).forEach(function(k) {
+    if (!areas[k]) existingCards[k].remove();
+  });
+
+  newKeys.forEach(function(areaName, idx) {
+    var data = areas[areaName];
+    var card = existingCards[areaName];
+
+    if (!card) {
+      card = document.createElement("div");
+      card.className = "area-card";
+      card.dataset.area = areaName;
+    }
+
+    if (!(areaName in localCollapsed)) localCollapsed[areaName] = data.collapsed;
+    var collapsed = localCollapsed[areaName];
+    card.classList.toggle("collapsed", collapsed);
+
+    var pct      = data.total > 0 ? (data.done / data.total) * 100 : 0;
+    var complete = data.done === data.total && data.total > 0;
+    var dlcLabel = data.isDLC ? ' <span style="font-size:11px;color:var(--gold-dim);font-family:\'Crimson Pro\',serif;font-style:italic;">DLC</span>' : "";
+
+    card.innerHTML = '<div class="area-header" onclick="toggleArea(\'' + escAttr(areaName) + '\')">'
+      + '<div class="area-header-left">'
+      + '<span class="area-toggle-icon">▼</span>'
+      + '<span class="area-name">' + escHtml(areaName) + dlcLabel + '</span>'
+      + '</div>'
+      + '<div class="area-progress-wrap">'
+      + '<span class="area-fraction">' + data.done + '/' + data.total + '</span>'
+      + '<div class="area-progress-bar">'
+      + '<div class="area-progress-fill' + (complete ? " complete" : "") + '" style="width:' + pct + '%"></div>'
+      + '</div></div></div>'
+      + '<div class="boss-list">'
+      + data.bosses.map(function(b) { return renderBossRow(b); }).join("")
+      + '</div>';
+
+    var children     = Array.from(grid.children);
+    var currentIndex = children.indexOf(card);
+    if (currentIndex !== idx) {
+      if (idx >= grid.children.length) {
+        grid.appendChild(card);
+      } else {
+        grid.insertBefore(card, grid.children[idx]);
+      }
+    }
+  });
+
+  // Re-apply active search after re-render
+  if (searchQuery) applySearch();
+}
+
+function renderBossRow(b) {
+  var isMain      = MAIN_BOSSES.has(b.boss);
+  var deathClass  = b.deaths === 0 ? " boss-deaths-zero" : "";
+  // data-boss attribute used by search
+  return '<div class="boss-row' + (b.done ? " done" : "") + '" data-boss="' + escAttr(b.boss) + '">'
+    + '<span class="boss-deaths' + deathClass + '">' + (b.deaths > 0 ? "†" + b.deaths : "†–") + '</span>'
+    + '<span class="boss-name' + (isMain ? " main" : "") + '">' + escHtml(b.boss) + '</span>'
+    + '<span class="boss-check">✓</span>'
+    + '</div>';
+}
+
+function toggleArea(areaName) {
+  localCollapsed[areaName] = !localCollapsed[areaName];
+  var card = document.querySelector('.area-card[data-area="' + CSS.escape(areaName) + '"]');
+  if (card) card.classList.toggle("collapsed", localCollapsed[areaName]);
+}
+
+// ═══════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════
+
+loadData();
+loadClips();
+setInterval(loadData,  5000);
+setInterval(loadClips, 15000);
+startTimerTick();
+</script>
+</body>
+</html>
