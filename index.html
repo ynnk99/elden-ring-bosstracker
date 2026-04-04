@@ -3023,6 +3023,10 @@ function processData(rows) {
   document.getElementById("val-percent").textContent = pct + "%";
   prevDoneBosses = doneBosses;
 
+  // Chips ein-/ausblenden je nach aktivem Filter
+  document.getElementById("stat-percent").style.display = showOnlyOpen ? "none" : "";
+  document.getElementById("stat-avg").style.display     = showOnlyOpen ? "none" : "";
+
   var rankingSnapshot = JSON.stringify(
     allBosses.map(function(b) { return b.boss + "|" + b.deaths + "|" + b.done; })
   );
