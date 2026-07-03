@@ -2904,8 +2904,8 @@ function loadData() {
 
 function processData(rows) {
   cachedRows = rows;
-  var baseGameFlag = isTrue(rows[0] && rows[0].c[16] ? rows[0].c[16].v : false);
-  var dlcFlag      = isTrue(rows[1] && rows[1].c[16] ? rows[1].c[16].v : false);
+  var baseGameFlag = isTrue(rows[0] && rows[0].c[17] ? rows[0].c[17].v : false);
+  var dlcFlag      = isTrue(rows[1] && rows[1].c[17] ? rows[1].c[17].v : false);
 
   if (prevDeaths === null) {
     showBase = baseGameFlag;
@@ -2914,9 +2914,9 @@ function processData(rows) {
     document.getElementById("btn-dlc").classList.toggle("active", showDLC);
   }
 
-  timerStartTs = Number(rows[0] && rows[0].c[22] ? rows[0].c[22].v : 0) || 0;
-  timerElapsed = Number(rows[2] && rows[2].c[22] ? rows[2].c[22].v : 0) || 0;
-  timerVisible = isTrue(rows[0] && rows[0].c[13] ? rows[0].c[13].v : false);
+  timerStartTs = Number(rows[0] && rows[0].c[23] ? rows[0].c[23].v : 0) || 0;
+  timerElapsed = Number(rows[2] && rows[2].c[23] ? rows[2].c[23].v : 0) || 0;
+  timerVisible = isTrue(rows[0] && rows[0].c[14] ? rows[0].c[14].v : false);
   updateTimerDisplay();
 
   var baseDeaths   = Number(rows[1] && rows[1].c[11] ? rows[1].c[11].v : 0) || 0;
