@@ -2919,8 +2919,8 @@ function processData(rows) {
   timerVisible = isTrue(rows[0] && rows[0].c[13] ? rows[0].c[13].v : false);
   updateTimerDisplay();
 
-  var baseDeaths   = Number(rows[1] && rows[1].c[10] ? rows[1].c[10].v : 0) || 0;
-  var dlcDeaths    = Number(rows[168] && rows[168].c[10] ? rows[168].c[10].v : 0) || 0;
+  var baseDeaths   = Number(rows[1] && rows[1].c[11] ? rows[1].c[11].v : 0) || 0;
+  var dlcDeaths    = Number(rows[168] && rows[168].c[11] ? rows[168].c[11].v : 0) || 0;
   var globalDeaths = 0;
   if (showBase && showDLC)  globalDeaths = baseDeaths + dlcDeaths;
   else if (showBase)         globalDeaths = baseDeaths;
