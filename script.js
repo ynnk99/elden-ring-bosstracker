@@ -2,19 +2,16 @@
 //  CONFIG
 // ═══════════════════════════════════════════════════════════════════════════
 
-const TWITCH_CLIENT_ID   = "n3oqt780bnsi3lb2gzinxdbrrazork";
+const TWITCH_CLIENT_ID   = "a8se4u0gd30ckvqe0unx8vjexa8kwx";
 const TWITCH_REDIRECT_URI = window.location.origin + window.location.pathname;
-const APPS_SCRIPT_URL    = "https://script.google.com/macros/s/AKfycbzTt2y1Cgt7wzQpBGJC57LFa8B2o90MmkeJXuf83lDxC8aUyJPhzu6O_jJm4J65j5ri/exec";
-const TOOLBOX_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzTt2y1Cgt7wzQpBGJC57LFa8B2o90MmkeJXuf83lDxC8aUyJPhzu6O_jJm4J65j5ri/exec";
+const APPS_SCRIPT_URL    = "https://script.google.com/macros/s/AKfycbzZu2DUlkI2iptgJrh0dWwoy0jUNlCQcp9TV4nb8c4RAayqH_7UimofqVY7BAfl0xLN/exec";
+const TOOLBOX_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzZu2DUlkI2iptgJrh0dWwoy0jUNlCQcp9TV4nb8c4RAayqH_7UimofqVY7BAfl0xLN/exec";
 
 const ALLOWED_USERS = [
-  "ynnk99",
-  "mahluna",
-  "der_gude_nico",
-  "Deeichkind",
+  "ynnk99"
 ];
 
-const SPREADSHEET_ID = "1r9BzZJYFrk4rQLlMn4ZPBBUuc8u_peqwThTi1UTCQcE";
+const SPREADSHEET_ID = "18U41_w3RTubIStFLPyshV_Eqt8UCyXZo0c7NlsecBHo";
 
 // ── NG+ ─────────────────────────────────────────────────────────────────
 // Der "lebende" Tab, in dem aktuell gespielt/bearbeitet wird.
