@@ -2452,7 +2452,7 @@ function processData(rows) {
     var area = r.c[0] && r.c[0].v ? r.c[0].v.trim() : "";
     var boss = r.c[1] && r.c[1].v ? r.c[1].v.trim() : "";
     if (!area || !boss) return;
-    if (area === "Gebiet" && boss === "Boss") return;
+    if ((area === "Gebiet" || area === "Area") && boss === "Boss") return;
     if (boss === "SHADOW OF THE ERDTREE DLC") return;
 
     var isBaseGame = separatorIndex === -1 || index < separatorIndex;
@@ -3192,7 +3192,7 @@ function parseSheetRowsForCompare(rows) {
     var area = r.c[0] && r.c[0].v ? String(r.c[0].v).trim() : "";
     var boss = r.c[1] && r.c[1].v ? String(r.c[1].v).trim() : "";
     if (!area || !boss) return;
-    if (area === "Gebiet" && boss === "Boss") return;
+    if ((area === "Gebiet" || area === "Area") && boss === "Boss") return;
     if (boss === "SHADOW OF THE ERDTREE DLC") return;
 
     var isDLC  = separatorIndex !== -1 && index > separatorIndex;
